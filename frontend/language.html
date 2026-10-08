@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ZamCyberAI — Choose Language</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 50px 40px;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .logo h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #7c3aed, #a78bfa, #ffffff);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+    }
+
+    .welcome {
+      margin-top: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 1rem;
+    }
+
+    .welcome span {
+      color: #a78bfa;
+      font-weight: 600;
+    }
+
+    .prompt {
+      margin: 35px 0 25px;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 1.15rem;
+      font-weight: 500;
+      line-height: 1.6;
+    }
+
+    .btn-lang {
+      display: block;
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .btn-english {
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      color: white;
+      box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+    }
+
+    .btn-english:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(124, 58, 237, 0.5);
+    }
+
+    .divider {
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 5px 0 16px;
+      letter-spacing: 1px;
+    }
+
+    .btn-bemba {
+      background: rgba(255, 255, 255, 0.07);
+      color: white;
+      border: 2px solid rgba(167, 139, 250, 0.5);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-bemba:hover {
+      background: rgba(167, 139, 250, 0.15);
+      border-color: #a78bfa;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(167, 139, 250, 0.3);
+    }
+
+    .btn-bemba .sub {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: rgba(255,255,255,0.45);
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .flag {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .footer {
+      margin-top: 35px;
+      color: rgba(255,255,255,0.25);
+      font-size: 0.78rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <span class="flag">🇿🇲</span>
+
+  <div class="logo">
+    <h1>ZamCyberAI</h1>
+  </div>
+
+  <p class="welcome">Welcome, <span id="username">friend</span>!</p>
+
+  <p class="prompt">Please select your preferred language<br/>Saleni ululimi lwenu</p>
+
+  <!-- English Button -->
+  <button class="btn-lang btn-english" onclick="selectLanguage('english')">
+    🌐 Continue in English
+  </button>
+
+  <!-- Divider -->
+  <div class="divider">— OR / NANGULA —</div>
+
+  <!-- Bemba Button -->
+  <button class="btn-lang btn-bemba" onclick="selectLanguage('bemba')">
+    🌐 Ukukonkanyapo mu Cibemba
+  </button>
+
+  <div class="footer">© 2026 ZamCyberAI · Cyber Literacy & Threat Education</div>
+
+</div>
+
+<script>
+  const SERVER_ORIGIN = 'http://127.0.0.1:5000';
+
+  if (window.location.protocol === 'file:') {
+    window.location.replace(`${SERVER_ORIGIN}/login.html`);
+  }
+
+  const API_BASE = SERVER_ORIGIN;
+
+  // Show the logged in username
+  const username = localStorage.getItem('username');
+  if (username) {
+    document.getElementById('username').textContent = username;
+  } else {
+    // If not logged in, redirect back to login
+    window.location.href = '/login.html';
+  }
+
+  function selectLanguage(lang) {
+    // Save chosen language to localStorage
+    localStorage.setItem('language', lang);
+    // Redirect to chat page
+    window.location.href = 'chat.html';
+  }
+</script>
+
+</body>
+</html>

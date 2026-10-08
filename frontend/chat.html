@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ZamCyberAI — Chat</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      height: 100vh;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+      display: flex;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 260px;
+      background: rgba(0,0,0,0.2);
+      border-right: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .btn-new-chat {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-new-chat:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+    }
+
+    .conversation-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .conversation-list::-webkit-scrollbar { width: 4px; }
+    .conversation-list::-webkit-scrollbar-thumb {
+      background: rgba(124, 58, 237, 0.3);
+      border-radius: 10px;
+    }
+
+    .conv-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: rgba(255,255,255,0.65);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conv-item:hover {
+      background: rgba(255,255,255,0.06);
+      color: white;
+    }
+
+    .conv-item.active {
+      background: rgba(124, 58, 237, 0.25);
+      color: white;
+      border: 1px solid rgba(167, 139, 250, 0.4);
+    }
+
+    .conv-title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .conv-delete {
+      opacity: 0;
+      color: #f87171;
+      font-size: 0.85rem;
+      padding: 2px 6px;
+      transition: opacity 0.2s;
+    }
+
+    .conv-item:hover .conv-delete { opacity: 1; }
+
+    .sidebar-empty {
+      color: rgba(255,255,255,0.3);
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 20px 10px;
+    }
+
+    /* ── MAIN AREA ── */
+    .main {
+      flex: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-left h1 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #7c3aed, #a78bfa, #ffffff);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .lang-badge {
+      background: rgba(124, 58, 237, 0.25);
+      border: 1px solid rgba(167, 139, 250, 0.4);
+      color: #a78bfa;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .username-tag {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+    }
+
+    .btn-switch {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-switch:hover {
+      background: rgba(124, 58, 237, 0.2);
+      border-color: #7c3aed;
+      color: white;
+    }
+
+    .topics-menu {
+      position: relative;
+    }
+
+    .topics-list {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 10;
+      display: none;
+      min-width: 220px;
+      padding: 8px;
+      background: #20213b;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 10px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    }
+
+    .topics-menu.open .topics-list { display: grid; gap: 4px; }
+
+    .topic-option {
+      width: 100%;
+      padding: 9px 10px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: rgba(255,255,255,0.82);
+      text-align: left;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .topic-option:hover {
+      background: rgba(124, 58, 237, 0.25);
+      color: white;
+    }
+
+    .btn-logout {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-logout:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* ── MESSAGES AREA ── */
+    .progress-panel {
+      padding: 0 24px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .progress-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 4px;
+      color: #f3f4f6;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .progress-toggle::-webkit-details-marker { display: none; }
+
+    .progress-toggle:focus-visible {
+      outline: 2px solid #a78bfa;
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+
+    .progress-toggle h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .progress-toggle-icon {
+      margin-left: auto;
+      color: rgba(255,255,255,0.65);
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    .progress-toggle-icon::before { content: "+"; }
+    .progress-panel[open] .progress-toggle-icon::before { content: "−"; }
+
+    .progress-shell {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(167, 139, 250, 0.2);
+      border-radius: 16px;
+      padding: 16px;
+      max-height: 38vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+      margin-bottom: 12px;
+    }
+
+    .mini-pill {
+      background: rgba(124, 58, 237, 0.2);
+      color: #d8b4fe;
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .metric-card .label {
+      color: rgba(255,255,255,0.55);
+      font-size: 0.72rem;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-card .value {
+      color: white;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .recommend-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.18), rgba(59, 130, 246, 0.08));
+      border: 1px solid rgba(167, 139, 250, 0.25);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+
+    .recommend-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      color: rgba(255,255,255,0.84);
+    }
+
+    .recommend-copy small {
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .recommend-copy strong {
+      font-size: 1rem;
+    }
+
+    .btn-recommend {
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .topic-progress-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .topic-progress-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .topic-progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: rgba(255,255,255,0.88);
+      font-size: 0.8rem;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar > span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #7c3aed, #34d399);
+      border-radius: inherit;
+    }
+
+    .messages {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .messages::-webkit-scrollbar { width: 5px; }
+    .messages::-webkit-scrollbar-thumb {
+      background: rgba(124, 58, 237, 0.3);
+      border-radius: 10px;
+    }
+
+    /* ── WELCOME MESSAGE ── */
+    .welcome-msg {
+      text-align: center;
+      padding: 30px 20px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .welcome-msg .icon { font-size: 3rem; margin-bottom: 12px; }
+
+    .welcome-msg h2 {
+      font-size: 1.2rem;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 8px;
+    }
+
+    .welcome-msg p { font-size: 0.9rem; line-height: 1.6; }
+
+    /* ── CHAT BUBBLES ── */
+    .message {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      max-width: 75%;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .message.bot { align-self: flex-start; }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .user .avatar {
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    }
+
+    .bot .avatar {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .bubble {
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .user .bubble {
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bot .bubble {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.9);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-body { min-width: 0; }
+
+    .message-actions {
+      display: flex;
+      gap: 4px;
+      margin: 5px 0 0 5px;
+    }
+
+    .message-action {
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: rgba(255,255,255,0.58);
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .message-action:hover, .message-action.active {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+    }
+
+    .message-action:disabled { cursor: default; opacity: 0.55; }
+
+    .security-card {
+      align-self: flex-start;
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(251, 191, 36, 0.55);
+      background: rgba(251, 191, 36, 0.12);
+      color: rgba(255,255,255,0.92);
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+
+    .security-card.danger { border-color: rgba(248, 113, 113, 0.8); background: rgba(239, 68, 68, 0.14); }
+    .security-card strong { display: block; margin-bottom: 4px; }
+
+    /* ── TYPING INDICATOR ── */
+    .typing .bubble {
+      font-style: italic;
+      color: rgba(255,255,255,0.7);
+      padding: 14px 18px;
+    }
+
+    /* ── INPUT AREA ── */
+    .input-area {
+      padding: 16px 24px;
+      background: rgba(255,255,255,0.03);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .input-area input {
+      flex: 1;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 14px 18px;
+      color: white;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    .input-area input::placeholder { color: rgba(255,255,255,0.3); }
+
+    .input-area input:focus {
+      border-color: #7c3aed;
+      background: rgba(124, 58, 237, 0.08);
+    }
+
+    .btn-send {
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      border: none;
+      border-radius: 12px;
+      padding: 14px 20px;
+      color: white;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .btn-send:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 8px;
+      color: rgba(255,255,255,0.2);
+      font-size: 0.72rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <button class="btn-new-chat" onclick="startNewChat()">+ New Chat</button>
+    </div>
+    <div class="conversation-list" id="conversationList">
+      <div class="sidebar-empty">No conversations yet</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-left">
+        <h1>🇿🇲 ZamCyberAI</h1>
+        <span class="lang-badge" id="langBadge">English</span>
+      </div>
+      <div class="header-right">
+        <span class="username-tag" id="usernameTag"></span>
+        <button class="btn-switch" onclick="switchLanguage()">🌐 Switch Language</button>
+        <div class="topics-menu" id="topicsMenu">
+          <button class="btn-switch" type="button" onclick="toggleTopics()" aria-expanded="false" aria-controls="topicsList">
+            📚 Topics
+          </button>
+          <div class="topics-list" id="topicsList" role="menu">
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Phishing and social engineering')">🎣 Phishing and social engineering</button>
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Password hygiene')">🔐 Password hygiene</button>
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Multi-factor authentication')">🛡️ Multi-factor authentication</button>
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Malware and ransomware')">🦠 Malware and ransomware</button>
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Data protection and privacy')">🔒 Data protection and privacy</button>
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Safe browsing and suspicious links')">🌐 Safe browsing and suspicious links</button>
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Email and messaging security')">✉️ Email and messaging security</button>
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Mobile phone security')">📱 Mobile phone security</button>
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Wi-Fi and public network safety')">📶 Wi-Fi and public network safety</button>
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Software updates and patching')">🔄 Software updates and patching</button>
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Social media security')">💬 Social media security</button>
+            <button class="topic-option" type="button" role="menuitem" onclick="selectTopic('Online scams and fraud')">⚠️ Online scams and fraud</button>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <details class="progress-panel" id="progressPanel">
+      <summary class="progress-toggle">
+        <h3>Learning Progress</h3>
+        <span class="mini-pill" id="progressLabel">Adaptive</span>
+        <span class="progress-toggle-icon" aria-hidden="true"></span>
+      </summary>
+      <div class="progress-shell">
+        <div class="progress-grid">
+          <div class="metric-card">
+            <div class="label">Language</div>
+            <div class="value" id="profileLanguage">English</div>
+          </div>
+          <div class="metric-card">
+            <div class="label">Level</div>
+            <div class="value" id="profileLevel">Beginner</div>
+          </div>
+          <div class="metric-card">
+            <div class="label">Goal</div>
+            <div class="value" id="profileGoal">Cyber awareness</div>
+          </div>
+          <div class="metric-card">
+            <div class="label">Focus</div>
+            <div class="value" id="profileFocus">General</div>
+          </div>
+        </div>
+        <div class="recommend-card">
+          <div class="recommend-copy">
+            <small>Recommended next</small>
+            <strong id="recommendedTopic">Password hygiene</strong>
+          </div>
+          <button class="btn-recommend" type="button" id="recommendedTopicBtn">Start topic</button>
+        </div>
+        <div class="topic-progress-list" id="topicProgressList"></div>
+      </div>
+    </details>
+
+    <!-- MESSAGES -->
+    <div class="messages" id="messages">
+      <div class="welcome-msg">
+        <div class="icon">🤖</div>
+        <h2 id="welcomeText">Hello! How can I help you today?</h2>
+        <p id="welcomeSub">Type a message below to start chatting with ZamCyberAI.</p>
+      </div>
+    </div>
+
+    <!-- INPUT -->
+    <div class="input-area">
+      <input
+        type="text"
+        id="userInput"
+        placeholder="Paste a message, email, or link to check..."
+        onkeypress="handleKey(event)"
+      />
+      <button class="btn-send" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+
+    <div class="footer">© 2026 ZamCyberAI · Cyber Literacy & Threat Education</div>
+  </div>
+
+<script>
+  const SERVER_ORIGIN = 'http://127.0.0.1:5000';
+
+  if (window.location.protocol === 'file:') {
+    window.location.replace(`${SERVER_ORIGIN}/login.html`);
+  }
+
+  const API_BASE = SERVER_ORIGIN;
+  const DEFAULT_TOPICS = [
+    'Phishing and social engineering',
+    'Password hygiene',
+    'Multi-factor authentication',
+    'Malware and ransomware',
+    'Data protection and privacy',
+    'Safe browsing and suspicious links',
+    'Email and messaging security',
+    'Mobile phone security',
+    'Wi-Fi and public network safety',
+    'Software updates and patching',
+    'Social media security',
+    'Online scams and fraud'
+  ];
+  let history = [];
+  let isSending = false;
+  let viewGeneration = 0;
+  let currentTopic = localStorage.getItem('current_topic') || null;
+  let currentConversationId = localStorage.getItem('conversation_id')
+    ? Number(localStorage.getItem('conversation_id'))
+    : null;
+  const language = localStorage.getItem('language') || 'english';
+  const username = localStorage.getItem('username') || 'Friend';
+  let learnerProfile = {
+    preferred_language: language,
+    experience_level: 'beginner',
+    learning_goal: 'cyber awareness'
+  };
+  let topicMastery = {};
+
+  // Redirect if not logged in
+  if (!localStorage.getItem('username')) {
+    window.location.href = 'login.html';
+  }
+
+  function setCurrentConversationId(id) {
+    currentConversationId = id;
+    if (id) {
+      localStorage.setItem('conversation_id', id);
+    } else {
+      localStorage.removeItem('conversation_id');
+    }
+  }
+
+  // Set username and language badge
+  document.getElementById('usernameTag').textContent = '👤 ' + username;
+  document.getElementById('langBadge').textContent =
+    language === 'bemba' ? 'Cibemba' : 'English';
+
+  // Set welcome message based on language
+  if (language === 'bemba') {
+    document.getElementById('welcomeText').textContent =
+      'Mwaiseni! Tumyafwe shani lelo?';
+    document.getElementById('welcomeSub').textContent =
+      'Lembeni ubutumwa ukutila mu lanshanye ne ZamCyberAI.';
+    document.getElementById('userInput').placeholder =
+      'Bindikeni ubutumwa bwenu...';
+  }
+
+  function resetWelcomeScreen() {
+    document.getElementById('messages').innerHTML = `
+      <div class="welcome-msg">
+        <div class="icon">🤖</div>
+        <h2>${language === 'bemba' ? 'Mwaiseni! Tumyafwe shani lelo?' : 'Hello! How can I help you today?'}</h2>
+        <p>${language === 'bemba' ? 'Lembeni ubutumwa ukutila mu lanshanye ne ZamCyberAI.' : 'Type a message below to start chatting with ZamCyberAI.'}</p>
+      </div>
+    `;
+  }
+
+  function getRecommendedTopic() {
+    const masteryEntries = DEFAULT_TOPICS.map((topic) => ({
+      topic,
+      score: Number(topicMastery[topic]?.mastery_score || 0),
+      lessons: Number(topicMastery[topic]?.lessons_completed || 0)
+    }));
+
+    const sorted = [...masteryEntries].sort((a, b) => {
+      if (a.score !== b.score) return a.score - b.score;
+      if (a.lessons !== b.lessons) return a.lessons - b.lessons;
+      return a.topic.localeCompare(b.topic);
+    });
+
+    return sorted[0]?.topic || DEFAULT_TOPICS[0];
+  }
+
+  function renderProgressPanel() {
+    const profileLanguage = document.getElementById('profileLanguage');
+    const profileLevel = document.getElementById('profileLevel');
+    const profileGoal = document.getElementById('profileGoal');
+    const profileFocus = document.getElementById('profileFocus');
+    const recommendedTopicEl = document.getElementById('recommendedTopic');
+    const recommendedBtn = document.getElementById('recommendedTopicBtn');
+    const topicList = document.getElementById('topicProgressList');
+
+    profileLanguage.textContent = learnerProfile.preferred_language === 'bemba' ? 'Cibemba' : 'English';
+    profileLevel.textContent = learnerProfile.experience_level ? learnerProfile.experience_level.charAt(0).toUpperCase() + learnerProfile.experience_level.slice(1) : 'Beginner';
+    profileGoal.textContent = learnerProfile.learning_goal ? learnerProfile.learning_goal : 'Cyber awareness';
+    profileFocus.textContent = currentTopic || 'General';
+
+    const recommendedTopic = getRecommendedTopic();
+    recommendedTopicEl.textContent = recommendedTopic;
+    recommendedBtn.onclick = () => selectTopic(recommendedTopic);
+
+    const masteryItems = DEFAULT_TOPICS.map((topic) => {
+      const stats = topicMastery[topic] || { mastery_score: 0, lessons_completed: 0 };
+      const percent = Math.max(0, Math.min(100, Number(stats.mastery_score || 0)));
+      return `
+        <div class="topic-progress-item">
+          <div class="topic-progress-header">
+            <span>${topic}</span>
+            <strong>${percent}%</strong>
+          </div>
+          <div class="progress-bar"><span style="width: ${percent}%"></span></div>
+        </div>
+      `;
+    }).join('');
+
+    topicList.innerHTML = masteryItems;
+  }
+
+  async function loadProfile() {
+    try {
+      const res = await fetch(`${API_BASE}/profile`, { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not load profile');
+
+      if (data.profile) {
+        learnerProfile = {
+          ...learnerProfile,
+          ...data.profile
+        };
+      }
+      if (data.topic_mastery) {
+        topicMastery = data.topic_mastery;
+      }
+      renderProgressPanel();
+    } catch (error) {
+      console.log('Profile not available yet.', error);
+      renderProgressPanel();
+    }
+  }
+
+  function appendMessage(sender, text, type, options = {}) {
+    const welcome = document.querySelector('.welcome-msg');
+    if (welcome) welcome.remove();
+
+    const messages = document.getElementById('messages');
+    const wrapper = document.createElement('div');
+    wrapper.className = `message ${type}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = type === 'user' ? '👤' : '🤖';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+
+    const body = document.createElement('div');
+    body.className = 'message-body';
+    body.appendChild(bubble);
+
+    if (type === 'bot' && options.messageId) {
+      addMessageActions(body, text, options);
+    }
+
+    wrapper.appendChild(avatar);
+    wrapper.appendChild(body);
+    messages.appendChild(wrapper);
+    messages.scrollTop = messages.scrollHeight;
+    requestAnimationFrame(() => {
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+    return wrapper;
+  }
+
+  function addMessageActions(body, text, options) {
+    if (body.querySelector('.message-actions')) return;
+
+    const actions = document.createElement('div');
+    actions.className = 'message-actions';
+
+    const copyButton = document.createElement('button');
+    copyButton.className = 'message-action';
+    copyButton.type = 'button';
+    copyButton.title = 'Copy response';
+    copyButton.setAttribute('aria-label', 'Copy response');
+    copyButton.textContent = '⧉';
+    copyButton.addEventListener('click', () => copyResponse(text, copyButton));
+    actions.appendChild(copyButton);
+
+    const upButton = document.createElement('button');
+    upButton.className = 'message-action';
+    upButton.type = 'button';
+    upButton.title = 'Good response';
+    upButton.setAttribute('aria-label', 'Good response');
+    upButton.textContent = '👍';
+    actions.appendChild(upButton);
+
+    const downButton = document.createElement('button');
+    downButton.className = 'message-action';
+    downButton.type = 'button';
+    downButton.title = options.canImprove === false ? 'Poor response' : 'Poor response — generate an improved answer';
+    downButton.setAttribute('aria-label', downButton.title);
+    downButton.textContent = '👎';
+
+    upButton.addEventListener('click', () => reactToResponse(options.messageId, 'up', upButton, downButton));
+    downButton.addEventListener('click', () => reactToResponse(options.messageId, 'down', upButton, downButton));
+    actions.appendChild(downButton);
+    body.appendChild(actions);
+  }
+
+  async function copyResponse(text, button) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (error) {
+      const temporary = document.createElement('textarea');
+      temporary.value = text;
+      document.body.appendChild(temporary);
+      temporary.select();
+      document.execCommand('copy');
+      temporary.remove();
+    }
+    button.textContent = '✓';
+    button.title = 'Copied';
+    setTimeout(() => {
+      button.textContent = '⧉';
+      button.title = 'Copy response';
+    }, 1500);
+  }
+
+  async function reactToResponse(messageId, reaction, upButton, downButton) {
+    upButton.disabled = true;
+    downButton.disabled = true;
+    try {
+      const res = await fetch(`${API_BASE}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ message_id: messageId, reaction })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not save feedback.');
+
+      (reaction === 'up' ? upButton : downButton).classList.add('active');
+      if (reaction === 'down' && data.improved_response) {
+        appendMessage('ZamCyberAI', data.improved_response, 'bot');
+        history.push({ role: 'assistant', content: data.improved_response });
+      }
+    } catch (error) {
+      console.error('feedback error', error);
+      upButton.disabled = false;
+      downButton.disabled = false;
+    }
+  }
+
+  function appendSecurityAssessment(analysis) {
+    if (!analysis || analysis.verdict === 'safe') return;
+    const card = document.createElement('div');
+    card.className = 'security-card' + (analysis.verdict === 'malicious' ? ' danger' : '');
+    const title = document.createElement('strong');
+    title.textContent = `Security check: ${analysis.verdict.toUpperCase()} (${analysis.risk_score}/100)`;
+    const detail = document.createElement('div');
+    detail.textContent = `${analysis.reasons.slice(0, 2).join(' ')} ${analysis.recommended_action}`;
+    card.appendChild(title);
+    card.appendChild(detail);
+    const messages = document.getElementById('messages');
+    messages.appendChild(card);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function showTyping() {
+    const messages = document.getElementById('messages');
+    const wrapper = document.createElement('div');
+    wrapper.className = 'message bot typing';
+    wrapper.id = 'typingIndicator';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = '🤖';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = language === 'bemba'
+      ? 'ZamCyberAI alelemba...'
+      : 'ZamCyberAI is typing...';
+
+    wrapper.appendChild(avatar);
+    wrapper.appendChild(bubble);
+    messages.appendChild(wrapper);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function removeTyping() {
+    const indicator = document.getElementById('typingIndicator');
+    if (indicator) indicator.remove();
+  }
+
+  async function loadConversations() {
+    const requestGeneration = viewGeneration;
+    try {
+      const res = await fetch(`${API_BASE}/conversations`, { credentials: 'include' });
+      const data = await res.json();
+      if (requestGeneration !== viewGeneration) return;
+      renderConversationList(data.conversations || []);
+    } catch (error) {
+      console.log('Could not load conversations.');
+    }
+  }
+
+  function renderConversationList(conversations) {
+    const list = document.getElementById('conversationList');
+
+    if (conversations.length === 0) {
+      list.innerHTML = '<div class="sidebar-empty">No conversations yet</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    conversations.forEach(conv => {
+      const item = document.createElement('div');
+      item.className = 'conv-item' + (Number(conv.id) === Number(currentConversationId) ? ' active' : '');
+      item.onclick = () => openConversation(conv.id);
+
+      const title = document.createElement('span');
+      title.className = 'conv-title';
+      title.textContent = conv.title || 'New Chat';
+
+      const del = document.createElement('span');
+      del.className = 'conv-delete';
+      del.textContent = '✕';
+      del.onclick = (e) => {
+        e.stopPropagation();
+        deleteConversation(conv.id);
+      };
+
+      item.appendChild(title);
+      item.appendChild(del);
+      list.appendChild(item);
+    });
+  }
+
+  async function openConversation(conversationId) {
+    const requestGeneration = ++viewGeneration;
+    conversationId = Number(conversationId);
+    setCurrentConversationId(conversationId);
+    history = [];
+    resetWelcomeScreen();
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/conversations/${conversationId}/messages`,
+        { credentials: 'include' }
+      );
+      const data = await res.json();
+
+      // Ignore a late response after the user has opened or started another chat.
+      if (requestGeneration !== viewGeneration) return;
+
+      if (data.messages && data.messages.length > 0) {
+        const welcome = document.querySelector('.welcome-msg');
+        if (welcome) welcome.remove();
+
+        data.messages.forEach(msg => {
+          const type = msg.role === 'user' ? 'user' : 'bot';
+          appendMessage(msg.role === 'user' ? 'You' : 'ZamCyberAI', msg.content, type, {
+            messageId: msg.role === 'assistant' ? msg.id : null
+          });
+          history.push({ role: msg.role, content: msg.content });
+        });
+      }
+    } catch (error) {
+      console.log('Could not load messages.', error);
+    }
+
+    if (requestGeneration === viewGeneration) loadConversations();
+  }
+
+  function startNewChat() {
+    viewGeneration++;
+    setCurrentConversationId(null);
+    history = [];
+    resetWelcomeScreen();
+    loadConversations();
+  }
+
+  async function deleteConversation(conversationId) {
+    if (!confirm('Delete this conversation?')) return;
+
+    await fetch(`${API_BASE}/conversations/${conversationId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({})
+    });
+
+    if (conversationId === currentConversationId) {
+      startNewChat();
+    } else {
+      loadConversations();
+    }
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const message = input.value.trim();
+    if (!message || isSending) return;
+
+    // A send owns the current pane; ignore any older conversation load.
+    viewGeneration++;
+    isSending = true;
+    input.value = '';
+    sendBtn.disabled = true;
+    input.disabled = true;
+
+    // ── Remove welcome screen ──
+    const welcome = document.querySelector('.welcome-msg');
+    if (welcome) welcome.remove();
+
+    // Show the message immediately. appendMessage uses textContent, so user or
+    // model text cannot accidentally be interpreted as HTML and disrupt the UI.
+    appendMessage('You', message, 'user');
+    history.push({ role: 'user', content: message });
+
+    showTyping();
+
+    try {
+      const body = {
+        message,
+        history: history.slice(0, -1),
+        language,
+        topic: currentTopic
+      };
+      if (currentConversationId) {
+        body.conversation_id = currentConversationId;
+      }
+
+      const res = await fetch(`${API_BASE}/chat/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        removeTyping();
+        const data = await res.json();
+        console.error('Chat API error', res.status, data);
+        appendMessage('ZamCyberAI', `⚠️ ${data.error || 'There was an error sending your message.'}`, 'bot');
+      } else {
+        const reader = res.body?.getReader();
+        if (!reader) throw new Error('Streaming responses are not supported by this browser.');
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let responseText = '';
+        let responseWrapper = null;
+        let result = null;
+        let streamError = null;
+
+        const handleEvent = (eventText) => {
+          const dataLine = eventText.split('\n').find(line => line.startsWith('data:'));
+          if (!dataLine) return;
+
+          const eventData = JSON.parse(dataLine.slice(5).trim());
+          if (eventData.type === 'start') {
+            setCurrentConversationId(eventData.conversation_id);
+            loadConversations();
+          } else if (eventData.type === 'chunk') {
+            responseText += eventData.text;
+            if (!responseWrapper) {
+              removeTyping();
+              responseWrapper = appendMessage('ZamCyberAI', '', 'bot');
+            }
+            responseWrapper.querySelector('.bubble').textContent = responseText;
+            document.getElementById('messages').scrollTop =
+              document.getElementById('messages').scrollHeight;
+          } else if (eventData.type === 'done') {
+            result = eventData;
+          } else if (eventData.type === 'error') {
+            streamError = eventData.error || 'Could not generate a response.';
+          }
+        };
+
+        while (true) {
+          const { value, done } = await reader.read();
+          buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+          let boundary = buffer.indexOf('\n\n');
+          while (boundary !== -1) {
+            handleEvent(buffer.slice(0, boundary));
+            buffer = buffer.slice(boundary + 2);
+            boundary = buffer.indexOf('\n\n');
+          }
+          if (done) break;
+        }
+        if (buffer.trim()) handleEvent(buffer);
+        if (streamError) throw new Error(streamError);
+        if (!result) throw new Error('The response stream ended before the reply was complete.');
+
+        if (result.profile) {
+          learnerProfile = { ...learnerProfile, ...result.profile };
+        }
+        if (result.topic_mastery) {
+          topicMastery = result.topic_mastery;
+        }
+        renderProgressPanel();
+
+        if (!result.conversation_id) {
+          appendMessage('ZamCyberAI', '⚠️ No response received. Please try again.', 'bot');
+        } else if (typeof result.reply === 'string' && result.reply.trim()) {
+          setCurrentConversationId(result.conversation_id);
+          if (!responseWrapper) {
+            responseWrapper = appendMessage('ZamCyberAI', result.reply, 'bot');
+          } else {
+            responseWrapper.querySelector('.bubble').textContent = result.reply;
+          }
+          addMessageActions(
+            responseWrapper.querySelector('.message-body'),
+            result.reply,
+            {
+              messageId: result.assistant_message_id,
+              canImprove: !['scam', 'malicious'].includes(result.analysis?.verdict)
+            }
+          );
+          history.push({ role: 'assistant', content: result.reply });
+          appendSecurityAssessment(result.analysis);
+          loadConversations();
+        }
+      }
+    } catch (error) {
+      removeTyping();
+      console.error('sendMessage error', error);
+      const message = error instanceof TypeError
+        ? 'Could not connect to the server. Please make sure the backend is running.'
+        : error.message;
+      appendMessage('ZamCyberAI', `⚠️ ${message}`, 'bot');
+    }
+
+    isSending = false;
+    sendBtn.disabled = false;
+    input.disabled = false;
+    input.focus();
+  }
+  function handleKey(event) {
+    if (event.key === 'Enter' && !isSending) sendMessage();
+  }
+
+  function switchLanguage() {
+    window.location.href = 'language.html';
+  }
+
+  function toggleTopics() {
+    const menu = document.getElementById('topicsMenu');
+    const button = menu.querySelector('button');
+    const isOpen = menu.classList.toggle('open');
+    button.setAttribute('aria-expanded', String(isOpen));
+  }
+
+  function selectTopic(topic) {
+    currentTopic = topic;
+    localStorage.setItem('current_topic', topic);
+    document.getElementById('topicsMenu').classList.remove('open');
+    document.getElementById('topicsMenu').querySelector('button').setAttribute('aria-expanded', 'false');
+    startNewChat();
+    const input = document.getElementById('userInput');
+    input.value = language === 'bemba'
+      ? `Ndebeleleni bwino pa ${topic} mu Cibemba, nafikilapo ifyo nakulamba.`
+      : `Teach me about ${topic}. Start with the basic concepts and give me a practical example.`;
+    input.focus();
+  }
+
+  async function logout() {
+    await fetch(`${API_BASE}/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
+
+  renderProgressPanel();
+  loadProfile();
+
+  // Load the active conversation or sidebar when the page opens
+  if (currentConversationId) {
+    openConversation(currentConversationId);
+  } else {
+    loadConversations();
+  }
+</script>
+
+</body>
+</html>

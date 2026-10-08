@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ZamCyberAI — Login</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #7c3aed, #a78bfa, #ffffff);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+    }
+
+    .logo p {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+      margin-top: 5px;
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 25px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 4px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      color: white;
+    }
+
+    .form { display: none; flex-direction: column; gap: 15px; }
+    .form.active { display: flex; }
+
+    .form input {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: white;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    .form input::placeholder { color: rgba(255,255,255,0.35); }
+
+    .form input:focus {
+      border-color: #7c3aed;
+      background: rgba(124, 58, 237, 0.1);
+    }
+
+    .btn {
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      color: white;
+      transition: all 0.3s;
+      margin-top: 5px;
+      letter-spacing: 0.5px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+    }
+
+    .message {
+      text-align: center;
+      font-size: 0.85rem;
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .message.success {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      display: block;
+    }
+
+    .message.error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      display: block;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 25px;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.78rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="logo">
+    <h1>ZamCyberAI</h1>
+    <p>Your Bilingual Cybersecurity Chatbot 🇿🇲</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('login')">Login</div>
+    <div class="tab" onclick="switchTab('signup')">Sign Up</div>
+  </div>
+
+  <!-- Message Box -->
+  <div class="message" id="message"></div>
+
+  <!-- Login Form -->
+  <div class="form active" id="loginForm">
+    <input type="email" id="loginEmail" placeholder="Email address" maxlength="254" autocomplete="email" />
+    <input type="password" id="loginPassword" placeholder="Password" maxlength="128" autocomplete="current-password" />
+    <button class="btn" type="button" onclick="handleLogin()">Login</button>
+  </div>
+
+  <!-- Signup Form -->
+<div class="form" id="signupForm">
+  <input type="text" id="signupUsername" placeholder="Full name" minlength="2" maxlength="50" autocomplete="name" />
+  <input type="email" id="signupEmail" placeholder="Email address" maxlength="254" autocomplete="email" />
+  <input type="password" id="signupPassword" placeholder="Create password (8+ characters, e.g. SafePass1!)" minlength="8" maxlength="128" autocomplete="new-password" />
+  
+  <button class="btn" type="button" onclick="handleSignup()">Create Account</button>
+</div>
+
+  <div class="footer">© 2026 ZamCyberAI · Cyber Literacy & Threat Education</div>
+</div>
+
+<script>
+  const SERVER_ORIGIN = 'http://127.0.0.1:5000';
+
+  // Always force the browser to talk to Flask on port 5000.
+  // This avoids Live Server/VS Code preview ports such as 5500 causing
+  // the login page to send fetches to the wrong origin.
+  if (window.location.protocol === 'file:') {
+    window.location.replace(`${SERVER_ORIGIN}/login.html`);
+  }
+
+  const API_BASE = SERVER_ORIGIN;
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.form').forEach(f => f.classList.remove('active'));
+    document.getElementById('message').className = 'message';
+    document.getElementById('message').textContent = '';
+
+    if (tab === 'login') {
+      document.querySelectorAll('.tab')[0].classList.add('active');
+      document.getElementById('loginForm').classList.add('active');
+    } else {
+      document.querySelectorAll('.tab')[1].classList.add('active');
+      document.getElementById('signupForm').classList.add('active');
+    }
+  }
+
+  function showMessage(text, type) {
+    const msg = document.getElementById('message');
+    msg.textContent = text;
+    msg.className = `message ${type}`;
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+
+    if (!email || !password) {
+      showMessage('Please fill in all fields.', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        localStorage.setItem('username', data.username);
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('conversation_id');
+        showMessage('Login successful! Redirecting...', 'success');
+        setTimeout(() => window.location.href = 'language.html', 1500);
+      } else {
+        showMessage(data.message || 'Login failed. Please try again.', 'error');
+      }
+    } catch (_error) {
+      showMessage('Cannot reach the server. Start Flask and try again.', 'error');
+    }
+  }
+
+  async function handleSignup() {
+    const username = document.getElementById('signupUsername').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value.trim();
+
+    if (!username || !email || !password) {
+      showMessage('Please fill in all fields.', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showMessage('Account created! Please log in.', 'success');
+        setTimeout(() => switchTab('login'), 1500);
+      } else {
+        showMessage(data.message || 'Sign up failed. Please try again.', 'error');
+      }
+    } catch (_error) {
+      showMessage('Cannot reach the server. Start Flask and try again.', 'error');
+    }
+  }
+</script>
+
+</body>
+</html>
